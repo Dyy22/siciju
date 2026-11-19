@@ -3,128 +3,67 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>404² — siciju.online</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self'; base-uri 'none'; form-action 'none';">
+  <meta name="referrer" content="no-referrer">
+  <title>404² — Lost &amp; Found Department of Nothing | siciju.online</title>
   <meta name="theme-color" content="#060608">
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23060608'/%3E%3Cg fill='none' stroke='%23d4ff4d' stroke-width='4.5' stroke-linecap='round'%3E%3Ccircle cx='32' cy='32' r='14'/%3E%3Cline x1='19' y1='45' x2='45' y2='19'/%3E%3C/g%3E%3C/svg%3E">
-  <style>
-    :root {
-      --bg: #060608;
-      --surface: #101015;
-      --text: #f2f0ea;
-      --muted: #85827b;
-      --accent: #d4ff4d;
-      --accent-ink: #090a07;
-      --border: rgba(242, 240, 234, 0.14);
-    }
-
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      min-height: 100dvh;
-      display: grid;
-      place-items: center;
-      padding: 1.5rem;
-      background:
-        radial-gradient(circle at 50% 35%, rgba(212, 255, 77, 0.06), transparent 55%),
-        var(--bg);
-      color: var(--text);
-      font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    .void-card {
-      width: min(520px, 100%);
-      padding: 2rem 1.75rem;
-      border-radius: 20px;
-      border: 1px solid var(--border);
-      background: var(--surface);
-      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.65);
-    }
-
-    .eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.45rem;
-      font-family: 'JetBrains Mono', ui-monospace, monospace;
-      font-size: 0.74rem;
-      letter-spacing: 0.08em;
-      color: var(--accent);
-      margin-bottom: 0.9rem;
-    }
-
-    h1 {
-      margin: 0 0 0.85rem;
-      font-size: clamp(1.5rem, 4vw, 2.05rem);
-      line-height: 1.15;
-      letter-spacing: -0.025em;
-    }
-
-    .path-box {
-      padding: 0.75rem 0.9rem;
-      margin: 0 0 1.2rem;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: rgba(255, 255, 255, 0.03);
-      font-family: 'JetBrains Mono', ui-monospace, monospace;
-      font-size: 0.8rem;
-      color: var(--muted);
-      word-break: break-all;
-    }
-
-    .path-box strong {
-      color: var(--text);
-      font-weight: 500;
-    }
-
-    p.note {
-      margin: 0 0 1.5rem;
-      font-size: 0.92rem;
-      color: var(--muted);
-      line-height: 1.5;
-    }
-
-    .back-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.75rem 1.3rem;
-      border-radius: 999px;
-      background: var(--text);
-      color: var(--bg);
-      text-decoration: none;
-      font-weight: 600;
-      font-size: 0.9rem;
-      transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
-    }
-
-    .back-btn:hover {
-      background: var(--accent);
-      color: var(--accent-ink);
-      transform: translateY(-2px);
-    }
-  </style>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com" referrerpolicy="no-referrer">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin referrerpolicy="no-referrer">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" referrerpolicy="no-referrer">
+  <link rel="stylesheet" href="/css/404.css">
 </head>
 <body>
-  <main class="void-card">
-    <div class="eyebrow">∅ ERROR 404² · SQUARED NOTHINGNESS</div>
-    <h1>you looked for a missing page on a website that is already empty.</h1>
-    <div class="path-box">
-      <strong id="requested-path">siciju.online/404</strong> &rarr; somehow even emptier than the homepage.
+  <canvas id="void404-canvas" aria-hidden="true"></canvas>
+
+  <header class="topbar">
+    <a class="corner-brand" href="/">
+      <span class="brand-symbol" aria-hidden="true">∅</span>
+      <span>siciju.online</span>
+    </a>
+    <div class="corner-hud">
+      <span class="hud-stat">swallowed: <strong id="swallowed-count">0</strong></span>
+      <button id="btn-sound-404" class="hud-chip" type="button" aria-pressed="true">sound: on</button>
     </div>
-    <p class="note">
-      The siciju.online homepage already has nothing on it. This subpage has even less.
-    </p>
-    <a class="back-btn" href="/">&larr; return to the main void</a>
+  </header>
+
+  <main id="void-card" class="void-card">
+    <div id="eyebrow-tag" class="eyebrow">∅ CASE #404² · SQUARED NOTHINGNESS</div>
+
+    <button id="code-badge" class="code-404" type="button" title="Click to destabilize">404<sup>2</sup></button>
+
+    <h1 id="headline-404">you searched for a missing page inside a website that is already empty.</h1>
+
+    <section class="evidence-box" aria-label="Lost and Found Evidence">
+      <div class="ev-row">
+        <span class="ev-key">REQUESTED PATH</span>
+        <strong id="requested-path" class="ev-val">siciju.online/404</strong>
+      </div>
+      <div class="ev-row">
+        <span class="ev-key">DIAGNOSIS</span>
+        <span id="diagnosis-text" class="ev-val">Negative content detected.</span>
+      </div>
+      <div class="ev-row">
+        <span class="ev-key">PAYLOAD</span>
+        <span id="void-depth" class="ev-val ev-accent">-404.00 KB</span>
+      </div>
+      <div class="ev-row">
+        <span class="ev-key">CHANCE IT EXISTS</span>
+        <span id="exist-prob" class="ev-val">0.000%</span>
+      </div>
+    </section>
+
+    <p id="excuse-line" class="excuse-line" aria-live="polite">Click anywhere in the dark to feed debris into the void.</p>
+
+    <div class="actions-404">
+      <a class="btn-primary" href="/">&larr; return to main void</a>
+      <button id="btn-search-harder" class="btn-secondary" type="button">try looking harder</button>
+      <button id="btn-feed-void" class="btn-ghost" type="button">feed path to void</button>
+    </div>
   </main>
 
-  <script>
-    (function () {
-      var el = document.getElementById('requested-path');
-      if (el && window.location && window.location.pathname) {
-        el.textContent = 'siciju.online' + window.location.pathname;
-      }
-    })();
-  </script>
+  <div id="toast-404" class="toast-404" role="status" aria-live="polite" hidden></div>
+
+  <script src="/js/404.js" defer></script>
 </body>
 </html>
