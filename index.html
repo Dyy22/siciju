@@ -123,6 +123,7 @@
       <button id="btn-manifest" class="hud-btn" type="button">manifest</button>
     </div>
     <div class="hud-group">
+      <a id="secret-play-link" class="hud-btn hud-btn-secret" href="/play/" hidden>backstage &nearr;</a>
       <button id="btn-terminal" class="hud-btn hud-btn-mono" type="button" title="Terminal (/)">&gt;_</button>
       <button id="btn-sound" class="hud-btn" type="button" aria-pressed="true">sound: on</button>
     </div>
@@ -163,7 +164,10 @@
       <ul id="ach-list" class="ach-list"></ul>
       <div id="ach-complete-banner" class="ach-complete-banner" hidden>
         <p id="ach-complete-text"></p>
-        <button id="btn-download-cert-2" class="btn-primary btn-sm" type="button"></button>
+        <div class="ach-complete-actions">
+          <button id="btn-download-cert-2" class="btn-primary btn-sm" type="button"></button>
+          <a id="ach-play-link" class="btn-ghost btn-sm" href="/play/">step behind the curtain &rarr;</a>
+        </div>
       </div>
     </div>
   </div>

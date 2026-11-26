@@ -31,6 +31,7 @@
     achHudLabel: document.getElementById('ach-hud-label'),
     achCount: document.getElementById('ach-count'),
     btnManifest: document.getElementById('btn-manifest'),
+    secretPlayLink: document.getElementById('secret-play-link'),
     btnTerminal: document.getElementById('btn-terminal'),
     btnSound: document.getElementById('btn-sound'),
     modalManifest: document.getElementById('modal-manifest'),
@@ -92,6 +93,7 @@
   var sessionSeconds = 0;
   var isScanning = false;
   var isDropped = false;
+  var brandKnocks = 0;
   var toastTimer = null;
   var pullTimestamps = [];
   var suppressCordClickUntil = 0;
@@ -679,6 +681,15 @@
     Sound.playVoidPing(0.15);
     if (isDropped) {
       restoreHeadline(true);
+      return;
+    }
+    brandKnocks++;
+    if (brandKnocks >= 3 && els.secretPlayLink && els.secretPlayLink.hidden) {
+      els.secretPlayLink.hidden = false;
+      Sound.playUnlock();
+      var br = els.brandMark.getBoundingClientRect();
+      Canvas.spawnZeroBurst(br.left + br.width * 0.5, br.bottom + 12);
+      showToast(t().brandKnockToast);
     } else {
       showToast(t().brandToast);
     }
@@ -822,6 +833,12 @@
     } else if (cmd === 'lamp') {
       toggleLamp();
       appendTermLine(res.lampToggled);
+    } else if (cmd === 'play' || cmd === 'enter' || cmd === '3d' || cmd === 'cd .backstage' || cmd === 'cd play') {
+      appendTermLine(res.enterPlay);
+      Sound.playUnlock();
+      global.setTimeout(function () {
+        global.location.href = '/play/';
+      }, 650);
     } else {
       appendTermLine(dict.terminalUnknown(trimmed));
     }
@@ -892,6 +909,7 @@
       if (matched) {
         konamiBuffer = [];
         Sound.playUnlock();
+        if (els.secretPlayLink) els.secretPlayLink.hidden = false;
         Canvas.spawnZeroBurst(global.innerWidth * 0.5, global.innerHeight * 0.45);
         showToast(t().konamiToast);
       }

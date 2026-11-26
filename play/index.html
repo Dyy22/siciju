@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; base-uri 'none'; form-action 'none';">
+  <meta name="referrer" content="no-referrer">
+  <title>SECTOR ∅ — Backstage Void Explorer | siciju.online</title>
+  <meta name="description" content="You slipped behind the empty homepage of siciju.online. Explore a 3D liminal void built with Three.js.">
+  <meta name="theme-color" content="#060608">
+
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com" referrerpolicy="no-referrer">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin referrerpolicy="no-referrer">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" referrerpolicy="no-referrer">
+  <link rel="stylesheet" href="/play/css/play.css">
+</head>
+<body>
+  <!-- WebGL Viewport Container -->
+  <div id="canvas-container" class="canvas-container" aria-label="3D Void Explorer Viewport"></div>
+
+  <!-- Minimal In-Game HUD -->
+  <header class="hud-top">
+    <div class="hud-cluster">
+      <a class="hud-pill hud-brand" href="/" title="Return to siciju.online homepage">
+        <span class="accent-dot" aria-hidden="true"></span>
+        <span>∅ SECTOR ∅</span>
+      </a>
+      <div id="zone-indicator" class="hud-pill hud-zone">CENTRAL ATRIUM · (0, 8)</div>
+    </div>
+
+    <div class="hud-cluster">
+      <button id="btn-log" class="hud-pill hud-btn" type="button">
+        anomalies: <strong id="anomaly-count">0</strong>/5
+      </button>
+      <button id="btn-flashlight" class="hud-pill hud-btn" type="button" aria-pressed="true" title="Flashlight (F)">
+        light: on
+      </button>
+      <button id="btn-audio" class="hud-pill hud-btn" type="button" aria-pressed="true" title="Audio (M)">
+        sound: on
+      </button>
+      <button id="btn-lowgrav" class="hud-pill hud-btn hud-btn-accent" type="button" aria-pressed="false" hidden title="Low Gravity (G)">
+        low-g: off
+      </button>
+      <button id="btn-pause" class="hud-pill hud-btn" type="button" title="Menu (Esc)">menu</button>
+    </div>
+  </header>
+
+  <!-- Center Crosshair & Interaction Prompt -->
+  <div id="reticle" class="reticle" aria-hidden="true">
+    <div class="reticle-dot"></div>
+  </div>
+  <div id="interact-prompt" class="interact-prompt" hidden>
+    <span class="prompt-key">E</span>
+    <span id="interact-label">Inspect</span>
+  </div>
+
+  <!-- Subtitle / Narrator Banner -->
+  <div id="narrator-banner" class="narrator-banner" role="status" aria-live="polite" hidden>
+    <span id="narrator-tag" class="narrator-tag">VOID LOG</span>
+    <p id="narrator-text" class="narrator-text"></p>
+  </div>
+
+  <!-- Desktop Bottom Controls Hint -->
+  <div id="controls-hint" class="controls-hint" aria-hidden="true">
+    <span><kbd>WASD</kbd> move</span>
+    <span><kbd>Shift</kbd> sprint</span>
+    <span><kbd>Space</kbd> jump</span>
+    <span><kbd>E</kbd> / click interact</span>
+    <span><kbd>F</kbd> light</span>
+    <span><kbd>Esc</kbd> menu</span>
+  </div>
+
+  <!-- Mobile Touch Controls (auto-shown on coarse pointer / touch) -->
+  <div id="touch-controls" class="touch-controls" hidden>
+    <div id="touch-stick-base" class="touch-stick-base" aria-label="Movement Joystick">
+      <div id="touch-stick-knob" class="touch-stick-knob"></div>
+    </div>
+    <div class="touch-actions">
+      <button id="touch-interact" class="touch-btn touch-btn-accent" type="button" hidden>ACT</button>
+      <button id="touch-jump" class="touch-btn" type="button">JUMP</button>
+    </div>
+  </div>
+
+  <!-- Start / Pause Overlay -->
+  <div id="menu-overlay" class="menu-overlay" role="dialog" aria-modal="true" aria-labelledby="menu-title">
+    <div class="menu-card">
+      <div class="menu-eyebrow">∅ SICIJU.ONLINE / BACKSTAGE · 3D LIMINAL EXPLORER</div>
+      <h1 id="menu-title" class="menu-title">SECTOR ∅</h1>
+      <p id="menu-subtitle" class="menu-subtitle">
+        You stepped behind the "there is nothing here" screen. Wander the obsidian archive, inspect 5 anomalies of nothingness, and awaken the central beacon.
+      </p>
+
+      <div class="menu-grid">
+        <div class="menu-panel">
+          <h2 class="panel-heading">ANOMALIES (<span id="menu-ach-count">0</span>/5)</h2>
+          <ul id="anomaly-list" class="anomaly-list"></ul>
+        </div>
+        <div class="menu-panel">
+          <h2 class="panel-heading">CONTROLS</h2>
+          <ul class="key-list">
+            <li><kbd>W A S D</kbd> <span>Walk around the void</span></li>
+            <li><kbd>Mouse</kbd> <span>Look (click or drag)</span></li>
+            <li><kbd>Shift</kbd> <span>Sprint</span></li>
+            <li><kbd>Space</kbd> <span>Jump across platforms</span></li>
+            <li><kbd>E</kbd> / <kbd>Click</kbd> <span>Inspect glowing objects</span></li>
+            <li><kbd>F</kbd> / <kbd>M</kbd> <span>Flashlight / Sound</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div id="complete-banner" class="complete-banner" hidden>
+        <p id="complete-text">All 5 anomalies documented. The central portal is awake, and Low-Gravity mode (G) is unlocked.</p>
+        <button id="btn-download-cert" class="btn-secondary" type="button">download explorer certificate (.txt)</button>
+      </div>
+
+      <div class="menu-actions">
+        <button id="btn-enter" class="btn-primary" type="button">ENTER THE VOID</button>
+        <a class="btn-ghost" href="/">&larr; back to empty homepage</a>
+      </div>
+
+      <p id="webgl-error" class="webgl-error" hidden></p>
+    </div>
+  </div>
+
+  <script type="module" src="/play/js/game.js"></script>
+</body>
+</html>

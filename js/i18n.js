@@ -31,6 +31,7 @@
     lampSpamToast: 'Hey, that is a light switch, not a gacha machine.',
 
     brandToast: '∅ siciju.online: 100% real domain, 0% content.',
+    brandKnockToast: 'You knocked 3 times. A backstage doorway appeared in the bottom bar.',
     brandRestoredToast: 'Letters restored. Please stop dropping them.',
     konamiToast: 'Cheat code activated! Your reward: still nothing (+0 pts).',
 
@@ -166,6 +167,7 @@
       '  find          search for useful things\n' +
       '  ping          measure emptiness latency\n' +
       '  lamp          pull the lamp cord remotely\n' +
+      '  play          step behind the curtain (3D)\n' +
       '  secret        reveal the grand secret\n' +
       '  sudo rm -rf / don’t even try\n' +
       '  clear / exit  clear or close shell',
@@ -174,7 +176,7 @@
     },
     terminalCommands: {
       ls: 'total 0\n(zero readable files)',
-      lsLa: 'total 4\ndrwxr-xr-x  2 siciju  void    0 Nov 19 10:00 .\ndrwxr-xr-x  1 root    void    0 Nov 19 10:00 ..\n-rw-r--r--  1 siciju  void   42 Nov 19 10:00 .breeze\n-rw-r--r--  1 siciju  void    0 Nov 19 10:00 hopes.txt',
+      lsLa: 'total 4\ndrwxr-xr-x  2 siciju  void    0 Nov 19 10:00 .\ndrwxr-xr-x  1 root    void    0 Nov 19 10:00 ..\ndrwx------  2 siciju  void    0 Nov 26 09:00 .backstage\n-rw-r--r--  1 siciju  void   42 Nov 19 10:00 .breeze\n-rw-r--r--  1 siciju  void    0 Nov 19 10:00 hopes.txt',
       catBreeze: 'whooooosh...\n(just a digital breeze passing through siciju.online.)',
       catHopes: '(0-byte file. utterly empty.)',
       pwd: '/dev/null/siciju.online',
@@ -183,7 +185,8 @@
       ping: 'PING siciju.online (127.0.0.0): 0 bytes of data.\n64 bytes from void: icmp_seq=1 ttl=64 time=0.00 ms (blazingly fast because nothing loads)',
       sudoRm: 'Permission denied. You cannot delete what was never there.',
       secret: 'The secret: the owner bought siciju.online before deciding what to build, so emptiness became the feature.',
-      lampToggled: 'Toggled the lamp cord remotely. Look around.'
+      lampToggled: 'Toggled the lamp cord remotely. Look around.',
+      enterPlay: 'Opening backstage hatch... shifting reality into 3 dimensions.'
     },
 
     certificateTemplate: function (data) {
