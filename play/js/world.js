@@ -4,7 +4,8 @@ import {
   createMonolithTexture,
   createGlowSpriteTexture,
   createPlaqueTexture,
-  createPortalVortexTexture
+  createPortalVortexTexture,
+  createLeaderboardTexture
 } from './textures.js';
 
 export const ANOMALIES = [
@@ -399,6 +400,55 @@ export function buildVoidWorld(scene) {
     label: 'Enter Void Runner Portal (/run/)',
     onInteract: ({ enterRunnerPortal }) => {
       if (enterRunnerPortal) enterRunnerPortal();
+    }
+  });
+
+  // Live 3D Global Leaderboard Monolith beside Runner Portal
+  const lbBoardPos = new THREE.Vector3(-19.2, 0, -10.8);
+  const lbGroup = new THREE.Group();
+  lbGroup.position.copy(lbBoardPos);
+  lbGroup.rotation.y = Math.PI / 4;
+  scene.add(lbGroup);
+
+  const lbPedestal = new THREE.Mesh(new THREE.BoxGeometry(2.65, 0.38, 0.75), monolithMat);
+  lbPedestal.position.y = 0.19;
+  const lbSlab = new THREE.Mesh(new THREE.BoxGeometry(2.45, 2.85, 0.36), monolithMat);
+  lbSlab.position.y = 1.75;
+  const lbTopTrim = new THREE.Mesh(new THREE.BoxGeometry(2.52, 0.08, 0.42), cyanMat);
+  lbTopTrim.position.y = 3.2;
+  const lbBottomTrim = new THREE.Mesh(new THREE.BoxGeometry(2.52, 0.06, 0.42), accentMat);
+  lbBottomTrim.position.y = 0.38;
+
+  let lbTex = createLeaderboardTexture([], 'SYNCING GLOBAL SCORES...');
+  const lbScreenMat = new THREE.MeshBasicMaterial({ map: lbTex });
+  const lbScreen = new THREE.Mesh(new THREE.PlaneGeometry(2.26, 2.68), lbScreenMat);
+  lbScreen.position.set(0, 1.78, 0.19);
+
+  lbGroup.add(lbPedestal, lbSlab, lbTopTrim, lbBottomTrim, lbScreen);
+
+  colliders.push({
+    minX: lbBoardPos.x - 1.35,
+    maxX: lbBoardPos.x + 1.35,
+    minY: 0,
+    maxY: 3.3,
+    minZ: lbBoardPos.z - 1.35,
+    maxZ: lbBoardPos.z + 1.35
+  });
+
+  function updateRunnerLeaderboard(entries, statusText) {
+    const nextTex = createLeaderboardTexture(entries, statusText);
+    lbScreenMat.map = nextTex;
+    lbScreenMat.needsUpdate = true;
+    lbTex.dispose();
+    lbTex = nextTex;
+  }
+
+  registerInteractable(lbScreen, {
+    id: 'runnerLeaderboard',
+    label: 'Refresh Runner Leaderboard',
+    onInteract: ({ audio, refreshLeaderboard }) => {
+      audio.playInteractPing();
+      if (refreshLeaderboard) refreshLeaderboard(true);
     }
   });
 
@@ -853,6 +903,7 @@ export function buildVoidWorld(scene) {
     animated,
     runnerPortalPos,
     activateCentralPortal,
+    updateRunnerLeaderboard,
     getZoneName(x, y, z) {
       if (Math.hypot(x - runnerPortalPos.x, z - runnerPortalPos.z) < 5.5) return 'RUNNER PORTAL';
       if (y > 5.2 && x > 18 && z < -18) return 'UPPER OBSERVATORY';

@@ -207,6 +207,54 @@ if (discovered.length === ANOMALIES.length) {
   portalNotified = true;
 }
 
+let leaderboardFetching = false;
+async function refreshLeaderboard(announce = false) {
+  if (leaderboardFetching) return;
+  leaderboardFetching = true;
+  if (announce) {
+    world.updateRunnerLeaderboard([], 'REFRESHING GLOBAL SCORES...');
+  }
+  try {
+    const res = await fetch('/api/leaderboard', { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (data.configured === false) {
+      world.updateRunnerLeaderboard([], 'D1 SETUP PENDING · [E] RETRY');
+      if (announce) {
+        speak(
+          'GLOBAL LEADERBOARD',
+          'Cloudflare D1 database is not connected yet. Bind DB to sync live scores.',
+          4500
+        );
+      }
+      return;
+    }
+    const entries = data.entries || [];
+    world.updateRunnerLeaderboard(entries, 'LIVE · PRESS [E] TO REFRESH');
+    if (announce) {
+      if (entries.length > 0) {
+        const top = entries[0];
+        speak(
+          'LEADERBOARD SYNCED',
+          `#1 ${top.nickname} · ${Number(top.score).toLocaleString('en-US')} pts (${entries.length} ranked).`,
+          4200
+        );
+      } else {
+        speak('LEADERBOARD SYNCED', 'Live board connected. No Void Runner runs saved yet.', 3600);
+      }
+    }
+  } catch {
+    world.updateRunnerLeaderboard([], 'OFFLINE · PRESS [E] TO RETRY');
+    if (announce) {
+      speak('LEADERBOARD OFFLINE', 'Unable to reach /api/leaderboard right now.', 3600);
+    }
+  } finally {
+    leaderboardFetching = false;
+  }
+}
+
+refreshLeaderboard(false);
+
 function discover(id) {
   if (discovered.includes(id)) return;
   discovered.push(id);
@@ -543,6 +591,7 @@ function triggerInteraction() {
     audio,
     openMenu,
     enterRunnerPortal,
+    refreshLeaderboard,
     time: elapsedGlobal
   });
 }

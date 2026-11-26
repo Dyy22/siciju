@@ -2,6 +2,8 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.m
 import { RunnerAudio } from './audio.js';
 
 const STORAGE_KEY = 'siciju_runner_v1';
+const NICKNAME_KEY = 'siciju_runner_nick_v1';
+const NICKNAME_REGEX = /^[A-Za-z0-9 _-]{2,16}$/;
 const LANES = [-2.6, 0, 2.6];
 
 const els = {
@@ -29,6 +31,14 @@ const els = {
   statOrbs: document.getElementById('stat-orbs'),
   statBest: document.getElementById('stat-best'),
   newRecordBadge: document.getElementById('new-record-badge'),
+  submitForm: document.getElementById('submit-form'),
+  nicknameInput: document.getElementById('nickname-input'),
+  btnSubmitScore: document.getElementById('btn-submit-score'),
+  submitStatus: document.getElementById('submit-status'),
+  leaderboardPanel: document.getElementById('leaderboard-panel'),
+  lbStatusTag: document.getElementById('lb-status-tag'),
+  leaderboardList: document.getElementById('leaderboard-list'),
+  leaderboardEmpty: document.getElementById('leaderboard-empty'),
   btnStart: document.getElementById('btn-start'),
   webglError: document.getElementById('webgl-error')
 };
@@ -64,6 +74,211 @@ function saveBest(data) {
 
 let records = loadBest();
 els.bestVal.textContent = String(records.bestScore);
+
+const runSession = {
+  seq: 0,
+  token: null,
+  promise: null,
+  backendConfigured: true,
+  submitted: false,
+  lastScore: 0,
+  lastDist: 0,
+  lastOrbs: 0
+};
+
+function loadSavedNickname() {
+  try {
+    return localStorage.getItem(NICKNAME_KEY) || '';
+  } catch {
+    return '';
+  }
+}
+
+function saveNickname(nick) {
+  try {
+    localStorage.setItem(NICKNAME_KEY, nick);
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+function setSubmitStatus(text, kind = '') {
+  if (!text) {
+    els.submitStatus.textContent = '';
+    els.submitStatus.className = 'submit-status';
+    els.submitStatus.hidden = true;
+    return;
+  }
+  els.submitStatus.textContent = text;
+  els.submitStatus.className = kind ? `submit-status is-${kind}` : 'submit-status';
+  els.submitStatus.hidden = false;
+}
+
+function renderLeaderboard(entries, highlightNick = '', statusLabel = 'GLOBAL · LIVE') {
+  els.lbStatusTag.textContent = statusLabel;
+  els.leaderboardList.replaceChildren();
+
+  if (!entries || entries.length === 0) {
+    els.leaderboardEmpty.textContent = runSession.backendConfigured
+      ? 'No scores submitted yet. Be the first drifter on the board.'
+      : 'Global leaderboard awaits Cloudflare D1 setup. Local best is still saved.';
+    els.leaderboardEmpty.hidden = false;
+    return;
+  }
+
+  els.leaderboardEmpty.hidden = true;
+  const targetKey = highlightNick ? highlightNick.toLowerCase() : '';
+
+  for (const entry of entries) {
+    const li = document.createElement('li');
+    const isSelf = targetKey && String(entry.nickname).toLowerCase() === targetKey;
+    li.className = 'lb-row' + (entry.rank === 1 ? ' is-top' : '') + (isSelf ? ' is-self' : '');
+
+    const rankEl = document.createElement('span');
+    rankEl.className = 'lb-rank';
+    rankEl.textContent = '#' + entry.rank;
+
+    const nickEl = document.createElement('span');
+    nickEl.className = 'lb-nick';
+    nickEl.textContent = entry.nickname;
+
+    const metaEl = document.createElement('span');
+    metaEl.className = 'lb-meta';
+    metaEl.textContent = `${entry.distance}m · ${entry.orbs}o`;
+
+    const scoreEl = document.createElement('span');
+    scoreEl.className = 'lb-score';
+    scoreEl.textContent = Number(entry.score).toLocaleString('en-US');
+
+    li.append(rankEl, nickEl, metaEl, scoreEl);
+    els.leaderboardList.appendChild(li);
+  }
+}
+
+async function fetchLeaderboard(highlightNick = '') {
+  try {
+    const res = await fetch('/api/leaderboard', { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    runSession.backendConfigured = data.configured !== false;
+    renderLeaderboard(
+      data.entries || [],
+      highlightNick || loadSavedNickname(),
+      runSession.backendConfigured ? 'GLOBAL · LIVE' : 'SETUP NEEDED'
+    );
+  } catch {
+    renderLeaderboard([], '', 'OFFLINE');
+    els.leaderboardEmpty.textContent = 'Global leaderboard unreachable offline. Local best is still saved.';
+  }
+}
+
+function requestRunToken() {
+  const seq = ++runSession.seq;
+  runSession.token = null;
+  runSession.submitted = false;
+  runSession.promise = fetch('/api/run/start', {
+    method: 'POST',
+    cache: 'no-store'
+  })
+    .then(async (res) => {
+      const data = await res.json().catch(() => null);
+      if (seq !== runSession.seq) return null;
+      if (!res.ok || !data || !data.token) {
+        if (res.status === 503 || (data && data.configured === false)) {
+          runSession.backendConfigured = false;
+        }
+        return null;
+      }
+      runSession.backendConfigured = true;
+      runSession.token = data.token;
+      return data.token;
+    })
+    .catch(() => null);
+}
+
+async function handleScoreSubmit(e) {
+  e.preventDefault();
+  if (runSession.submitted) return;
+
+  const nickname = els.nicknameInput.value.trim().replace(/\s+/g, ' ');
+  if (!NICKNAME_REGEX.test(nickname)) {
+    setSubmitStatus('Use 2–16 characters (letters, numbers, spaces, _ or -).', 'err');
+    els.nicknameInput.focus();
+    return;
+  }
+
+  saveNickname(nickname);
+  els.btnSubmitScore.disabled = true;
+  els.btnSubmitScore.textContent = 'SUBMITTING...';
+  setSubmitStatus('', '');
+
+  if (!runSession.token && runSession.promise) {
+    await runSession.promise;
+  }
+
+  if (!runSession.token) {
+    els.btnSubmitScore.disabled = false;
+    els.btnSubmitScore.textContent = 'SUBMIT SCORE';
+    setSubmitStatus(
+      runSession.backendConfigured
+        ? 'Run token missing or expired. Launch a new run to submit.'
+        : 'Global leaderboard is waiting for Cloudflare D1 setup.',
+      'err'
+    );
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/leaderboard', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      cache: 'no-store',
+      body: JSON.stringify({
+        nickname,
+        score: runSession.lastScore,
+        distance: runSession.lastDist,
+        orbs: runSession.lastOrbs,
+        token: runSession.token
+      })
+    });
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      if (res.status === 400) {
+        els.btnSubmitScore.disabled = false;
+        els.btnSubmitScore.textContent = 'SUBMIT SCORE';
+      } else {
+        els.btnSubmitScore.textContent = 'UNAVAILABLE';
+      }
+      setSubmitStatus(data.error || 'Could not save score.', 'err');
+      return;
+    }
+
+    runSession.submitted = true;
+    els.btnSubmitScore.disabled = true;
+    els.btnSubmitScore.textContent = 'SUBMITTED';
+    els.nicknameInput.blur();
+    renderLeaderboard(data.entries || [], nickname, 'GLOBAL · LIVE');
+
+    if (data.keptHigherExisting && data.record) {
+      setSubmitStatus(
+        `Kept higher existing record (${Number(data.record.score).toLocaleString('en-US')}) for ${data.record.nickname} · Rank #${data.record.rank || '?'}.`,
+        'ok'
+      );
+    } else if (data.record) {
+      setSubmitStatus(
+        `Score saved for ${data.record.nickname} · Rank #${data.record.rank || '?'}.`,
+        'ok'
+      );
+    } else {
+      setSubmitStatus('Score saved to global leaderboard.', 'ok');
+    }
+  } catch {
+    els.btnSubmitScore.disabled = false;
+    els.btnSubmitScore.textContent = 'SUBMIT SCORE';
+    setSubmitStatus('Network error while submitting score.', 'err');
+  }
+}
 
 let calloutTimer = null;
 function showCallout(text) {
@@ -499,6 +714,11 @@ function resetGame() {
     spawnWave();
   }
 
+  requestRunToken();
+  els.submitForm.hidden = true;
+  els.leaderboardPanel.hidden = false;
+  setSubmitStatus('', '');
+
   els.overlay.hidden = true;
   if (isTouch) els.touchPad.hidden = false;
   updateHUD();
@@ -511,6 +731,8 @@ function pauseGame() {
   els.overlayTitle.textContent = 'DRIFT SUSPENDED';
   els.overlaySubtitle.textContent = 'Take a breather. The void is patiently waiting.';
   els.statsGrid.hidden = true;
+  els.submitForm.hidden = true;
+  els.leaderboardPanel.hidden = true;
   els.btnStart.textContent = 'RESUME DRIFT';
   els.overlay.hidden = false;
 }
@@ -538,6 +760,11 @@ function triggerGameOver() {
   saveBest(records);
   updateHUD();
 
+  runSession.lastScore = finalScore;
+  runSession.lastDist = finalDist;
+  runSession.lastOrbs = state.orbs;
+  runSession.submitted = false;
+
   els.overlayEyebrow.textContent = '∅ COLLISION DETECTED';
   els.overlayTitle.textContent = 'RUN TERMINATED';
   els.overlaySubtitle.textContent =
@@ -551,6 +778,20 @@ function triggerGameOver() {
   els.statBest.textContent = String(records.bestScore);
   els.newRecordBadge.hidden = !isNewRecord;
   els.statsGrid.hidden = false;
+
+  if (!els.nicknameInput.value) {
+    els.nicknameInput.value = loadSavedNickname();
+  }
+  els.btnSubmitScore.disabled = false;
+  els.btnSubmitScore.textContent = 'SUBMIT SCORE';
+  if (!runSession.backendConfigured) {
+    setSubmitStatus('Global leaderboard awaits Cloudflare D1 setup — local best is saved.', '');
+  } else {
+    setSubmitStatus('', '');
+  }
+  els.submitForm.hidden = false;
+  els.leaderboardPanel.hidden = false;
+
   els.btnStart.textContent = 'RUN AGAIN';
   els.overlay.hidden = false;
 }
@@ -648,6 +889,13 @@ function triggerDuck() {
 
 window.addEventListener('keydown', (e) => {
   const code = e.code;
+
+  if (document.activeElement === els.nicknameInput) {
+    if (code === 'Escape') {
+      els.nicknameInput.blur();
+    }
+    return;
+  }
 
   if (code === 'Escape' || code === 'KeyP') {
     if (state.mode === 'playing') pauseGame();
@@ -969,6 +1217,9 @@ function animate(now) {
 }
 
 renderer.setAnimationLoop(animate);
+
+els.submitForm.addEventListener('submit', handleScoreSubmit);
+fetchLeaderboard();
 
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;

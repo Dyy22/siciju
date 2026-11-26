@@ -1,5 +1,8 @@
 wrangler.jsonc
 .assetsignore
+schema.sql
+src
+src/**
 README.md
 CNAME
 .git

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; base-uri 'none'; form-action 'none';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; base-uri 'none'; form-action 'none';">
   <meta name="referrer" content="no-referrer">
   <title>VOID RUNNER // ∅-DRIFT | siciju.online</title>
   <meta name="description" content="High-speed 3D endless void runner built with Three.js for siciju.online.">
@@ -91,6 +91,24 @@
         </div>
       </div>
 
+      <form id="submit-form" class="submit-form" hidden novalidate>
+        <label class="submit-label" for="nickname-input">SUBMIT TO GLOBAL LEADERBOARD (HIGHEST SCORE KEPT PER NICKNAME)</label>
+        <div class="submit-row">
+          <input
+            id="nickname-input"
+            class="nickname-input"
+            type="text"
+            minlength="2"
+            maxlength="16"
+            autocomplete="nickname"
+            placeholder="Nickname (2–16 chars)"
+            required
+          >
+          <button id="btn-submit-score" class="btn-secondary" type="submit">SUBMIT SCORE</button>
+        </div>
+        <p id="submit-status" class="submit-status" hidden></p>
+      </form>
+
       <div class="controls-legend">
         <span><kbd>A</kbd> <kbd>D</kbd> / <kbd>&larr;</kbd> <kbd>&rarr;</kbd> switch lanes</span>
         <span><kbd>W</kbd> / <kbd>&uarr;</kbd> / <kbd>Space</kbd> jump</span>
@@ -103,6 +121,15 @@
         <a class="btn-ghost" href="/play/">explore 3D void &rarr;</a>
         <a class="btn-ghost" href="/">&larr; empty homepage</a>
       </div>
+
+      <section id="leaderboard-panel" class="leaderboard-panel" aria-label="Global Leaderboard">
+        <div class="lb-head">
+          <span class="lb-title">TOP 10 DRIFTERS</span>
+          <span id="lb-status-tag" class="lb-tag">SYNCING...</span>
+        </div>
+        <ol id="leaderboard-list" class="lb-list"></ol>
+        <p id="leaderboard-empty" class="lb-empty" hidden></p>
+      </section>
 
       <p id="webgl-error" class="webgl-error" hidden></p>
     </div>
