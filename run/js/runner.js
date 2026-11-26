@@ -232,24 +232,44 @@ scene.add(starPoints);
 // ==========================================================================
 
 const gliderGroup = new THREE.Group();
-const hullMat = new THREE.MeshStandardMaterial({ color: 0x1a1a22, roughness: 0.3, metalness: 0.65 });
-const hullBody = new THREE.Mesh(new THREE.ConeGeometry(0.55, 1.85, 4), hullMat);
-hullBody.rotation.x = -Math.PI / 2;
-hullBody.rotation.z = Math.PI / 4;
-hullBody.scale.set(1.15, 1, 0.45);
+const hullMat = new THREE.MeshStandardMaterial({
+  color: 0x2a2d3a,
+  emissive: 0x0b0e14,
+  roughness: 0.28,
+  metalness: 0.65
+});
+
+const hullGeo = new THREE.ConeGeometry(0.58, 2.0, 4);
+hullGeo.rotateY(Math.PI / 4);
+hullGeo.rotateX(-Math.PI / 2);
+hullGeo.scale(1.15, 0.44, 1.0);
+const hullBody = new THREE.Mesh(hullGeo, hullMat);
 gliderGroup.add(hullBody);
 
-const wingGeo = new THREE.BoxGeometry(1.65, 0.08, 0.65);
+const dorsalSpine = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.06, 1.45), limeEmissiveMat);
+dorsalSpine.position.set(0, 0.2, -0.05);
+gliderGroup.add(dorsalSpine);
+
+const wingGeo = new THREE.BoxGeometry(1.75, 0.07, 0.62);
 const wingMesh = new THREE.Mesh(wingGeo, hullMat);
-wingMesh.position.set(0, -0.02, 0.25);
+wingMesh.position.set(0, -0.02, 0.34);
 gliderGroup.add(wingMesh);
 
-const wingTrim = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.05, 0.09), limeEmissiveMat);
-wingTrim.position.set(0, 0.01, 0.58);
+const wingTrim = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.05, 0.08), limeEmissiveMat);
+wingTrim.position.set(0, 0.01, 0.66);
 gliderGroup.add(wingTrim);
 
-const thruster = new THREE.Mesh(new THREE.SphereGeometry(0.18, 12, 12), limeEmissiveMat);
-thruster.position.set(0, 0, 0.88);
+const finGeo = new THREE.BoxGeometry(0.06, 0.28, 0.42);
+const finL = new THREE.Mesh(finGeo, hullMat);
+finL.position.set(-0.66, 0.12, 0.52);
+finL.rotation.z = 0.22;
+const finR = new THREE.Mesh(finGeo, hullMat);
+finR.position.set(0.66, 0.12, 0.52);
+finR.rotation.z = -0.22;
+gliderGroup.add(finL, finR);
+
+const thruster = new THREE.Mesh(new THREE.SphereGeometry(0.13, 12, 12), limeEmissiveMat);
+thruster.position.set(0, 0, 0.96);
 gliderGroup.add(thruster);
 
 const gliderHalo = new THREE.Sprite(
@@ -260,12 +280,12 @@ const gliderHalo = new THREE.Sprite(
     depthWrite: false
   })
 );
-gliderHalo.position.set(0, 0, 0.95);
-gliderHalo.scale.set(1.8, 1.8, 1);
+gliderHalo.position.set(0, 0, 1.04);
+gliderHalo.scale.set(1.3, 1.3, 1);
 gliderGroup.add(gliderHalo);
 
-const gliderLight = new THREE.PointLight(0xd4ff4d, 8, 9, 1.6);
-gliderLight.position.set(0, 0.4, 0.3);
+const gliderLight = new THREE.PointLight(0xd4ff4d, 6.5, 9, 1.6);
+gliderLight.position.set(0, 0.4, 0.35);
 gliderGroup.add(gliderLight);
 
 const shieldBubble = new THREE.Mesh(
@@ -330,6 +350,14 @@ function spawnBurst(x, y, z, colorHex, count = 16) {
   }
 }
 
+const hazardEdgeMat = new THREE.LineBasicMaterial({ color: 0xff6b52, transparent: true, opacity: 0.6 });
+const shifterEdgeMat = new THREE.LineBasicMaterial({ color: 0xffb84d, transparent: true, opacity: 0.65 });
+
+function addEdgeOutline(mesh, edgeMat) {
+  const edges = new THREE.LineSegments(new THREE.EdgesGeometry(mesh.geometry), edgeMat);
+  mesh.add(edges);
+}
+
 function createObstacle(type, laneIdx, zPos, extra = {}) {
   const x = LANES[laneIdx];
   const group = new THREE.Group();
@@ -338,6 +366,7 @@ function createObstacle(type, laneIdx, zPos, extra = {}) {
   if (type === 'pillar') {
     const body = new THREE.Mesh(new THREE.BoxGeometry(1.75, 4.2, 1.4), hazardBodyMat);
     body.position.y = 2.1;
+    addEdgeOutline(body, hazardEdgeMat);
     const trim = new THREE.Mesh(new THREE.BoxGeometry(1.82, 0.16, 1.46), hazardTrimMat);
     trim.position.y = 1.25;
     const baseTrim = new THREE.Mesh(new THREE.BoxGeometry(1.82, 0.12, 1.46), hazardTrimMat);
@@ -347,6 +376,7 @@ function createObstacle(type, laneIdx, zPos, extra = {}) {
   } else if (type === 'low') {
     const body = new THREE.Mesh(new THREE.BoxGeometry(1.95, 0.86, 0.9), hazardBodyMat);
     body.position.y = 0.43;
+    addEdgeOutline(body, hazardEdgeMat);
     const laser = new THREE.Mesh(new THREE.BoxGeometry(2.02, 0.16, 0.96), hazardTrimMat);
     laser.position.y = 0.84;
     group.add(body, laser);
@@ -359,6 +389,7 @@ function createObstacle(type, laneIdx, zPos, extra = {}) {
     postR.position.set(1.02, 1.175, 0);
     const bar = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.7, 0.8), hazardBodyMat);
     bar.position.y = 1.5;
+    addEdgeOutline(bar, hazardEdgeMat);
     const bottomLaser = new THREE.Mesh(new THREE.BoxGeometry(2.24, 0.14, 0.84), hazardTrimMat);
     bottomLaser.position.y = 0.65;
     group.add(postL, postR, bar, bottomLaser);
@@ -366,6 +397,7 @@ function createObstacle(type, laneIdx, zPos, extra = {}) {
   } else if (type === 'shifter') {
     const body = new THREE.Mesh(new THREE.BoxGeometry(1.65, 2.6, 1.2), hazardBodyMat);
     body.position.y = 1.3;
+    addEdgeOutline(body, shifterEdgeMat);
     const trim = new THREE.Mesh(new THREE.BoxGeometry(1.72, 0.18, 1.26), shifterTrimMat);
     trim.position.y = 1.3;
     group.add(body, trim);

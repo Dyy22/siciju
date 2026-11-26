@@ -31,7 +31,8 @@ const els = {
   completeBanner: document.getElementById('complete-banner'),
   btnDownloadCert: document.getElementById('btn-download-cert'),
   btnEnter: document.getElementById('btn-enter'),
-  webglError: document.getElementById('webgl-error')
+  webglError: document.getElementById('webgl-error'),
+  warpVeil: document.getElementById('warp-veil')
 };
 
 const reducedMotion =
@@ -67,6 +68,7 @@ function saveProgress(list) {
 
 const discovered = loadProgress();
 let isPlaying = false;
+let isWarping = false;
 let lowGravity = false;
 let portalNotified = false;
 let narratorTimer = null;
@@ -515,13 +517,32 @@ function updateTargeting() {
   }
 }
 
+function enterRunnerPortal() {
+  if (isWarping) return;
+  isWarping = true;
+  if (document.pointerLockElement) {
+    try {
+      document.exitPointerLock();
+    } catch (_) {}
+  }
+  audio.playPortalWarp();
+  speak('PORTAL ENGAGED', 'Warping to VOID RUNNER // ∅-DRIFT...', 2000);
+  if (els.warpVeil) {
+    els.warpVeil.classList.add('is-active');
+  }
+  window.setTimeout(() => {
+    window.location.href = '/run/';
+  }, 600);
+}
+
 function triggerInteraction() {
-  if (!currentTarget || !isPlaying) return;
+  if (!currentTarget || !isPlaying || isWarping) return;
   currentTarget.onInteract({
     discover,
     speak,
     audio,
     openMenu,
+    enterRunnerPortal,
     time: elapsedGlobal
   });
 }
@@ -704,9 +725,18 @@ function animate(now) {
     fn(elapsedGlobal, dt);
   }
 
-  if (isPlaying) {
+  if (isWarping) {
+    if (!reducedMotion && camera.fov < 110) {
+      camera.fov += (110 - camera.fov) * Math.min(1, dt * 6);
+      camera.updateProjectionMatrix();
+    }
+  } else if (isPlaying) {
     stepPhysics(dt);
     updateTargeting();
+    const wp = world.runnerPortalPos;
+    if (wp && Math.hypot(player.pos.x - wp.x, player.pos.z - wp.z) < 1.65 && player.pos.y < 3.5) {
+      enterRunnerPortal();
+    }
   } else if (discovered.length === 0 && !reducedMotion && els.menuOverlay && !els.menuOverlay.hidden) {
     euler.y = Math.sin(elapsedGlobal * 0.14) * 0.32;
     euler.x = 0.06;

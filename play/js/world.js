@@ -3,7 +3,8 @@ import {
   createFloorTexture,
   createMonolithTexture,
   createGlowSpriteTexture,
-  createPlaqueTexture
+  createPlaqueTexture,
+  createPortalVortexTexture
 } from './textures.js';
 
 export const ANOMALIES = [
@@ -285,6 +286,121 @@ export function buildVoidWorld(scene) {
   addBox(23, 0.018, 0, 24, 0.03, 0.18, accentMat, false);   // East -> Gallery
   addBox(0, 0.018, 23, 0.18, 0.03, 24, accentMat, false);   // South -> Server Room
   addBox(-23, 0.018, 0, 24, 0.03, 0.18, accentMat, false);  // West -> Gravity Garden
+
+  // ========================================================================
+  // 1B. NW RUNNER PORTAL GATE (Walkable Gate -> /run/)
+  // ========================================================================
+
+  const cyanGlowTex = createGlowSpriteTexture('#4df3ff');
+  const cyanMat = new THREE.MeshStandardMaterial({
+    color: 0x4df3ff,
+    emissive: 0x4df3ff,
+    emissiveIntensity: 1.6,
+    roughness: 0.2
+  });
+
+  // Cyan guide line along NW diagonal from Atrium edge to portal plinth
+  const nwGuide = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.03, 10.5), cyanMat);
+  nwGuide.position.set(-9.4, 0.018, -9.4);
+  nwGuide.rotation.y = Math.PI / 4;
+  scene.add(nwGuide);
+
+  const runnerPortalPos = new THREE.Vector3(-15, 0, -15);
+  const portalGate = new THREE.Group();
+  portalGate.position.copy(runnerPortalPos);
+  portalGate.rotation.y = Math.PI / 4;
+  scene.add(portalGate);
+
+  // Octagonal step-up plinth
+  const plinth = new THREE.Mesh(new THREE.CylinderGeometry(2.9, 3.1, 0.32, 8), monolithMat);
+  plinth.position.y = 0.16;
+  portalGate.add(plinth);
+  colliders.push({
+    minX: runnerPortalPos.x - 2.1,
+    maxX: runnerPortalPos.x + 2.1,
+    minY: 0,
+    maxY: 0.32,
+    minZ: runnerPortalPos.z - 2.1,
+    maxZ: runnerPortalPos.z + 2.1
+  });
+
+  // Twin side pillars + top lintel (visual inside rotated group)
+  const gatePillarGeo = new THREE.BoxGeometry(0.65, 4.4, 0.75);
+  const gatePostL = new THREE.Mesh(gatePillarGeo, monolithMat);
+  gatePostL.position.set(-2.05, 2.52, 0);
+  const gatePostR = new THREE.Mesh(gatePillarGeo, monolithMat);
+  gatePostR.position.set(2.05, 2.52, 0);
+  const gateLintel = new THREE.Mesh(new THREE.BoxGeometry(4.9, 0.55, 0.85), monolithMat);
+  gateLintel.position.set(0, 4.85, 0);
+  const gateTrim = new THREE.Mesh(new THREE.BoxGeometry(4.5, 0.1, 0.9), cyanMat);
+  gateTrim.position.set(0, 4.55, 0);
+  portalGate.add(gatePostL, gatePostR, gateLintel, gateTrim);
+
+  // World-space AABB colliders for side pillars only (center remains open & walkable)
+  const cos45 = Math.cos(Math.PI / 4);
+  [-2.05, 2.05].forEach((lx) => {
+    const wx = runnerPortalPos.x + lx * cos45;
+    const wz = runnerPortalPos.z - lx * cos45;
+    colliders.push({
+      minX: wx - 0.42,
+      maxX: wx + 0.42,
+      minY: 0.32,
+      maxY: 4.8,
+      minZ: wz - 0.42,
+      maxZ: wz + 0.42
+    });
+  });
+
+  // Swirling cyan/lime vortex disc + counter-rotating energy rings
+  const portalVortex = new THREE.Mesh(
+    new THREE.CircleGeometry(1.55, 36),
+    new THREE.MeshBasicMaterial({
+      map: createPortalVortexTexture(),
+      transparent: true,
+      opacity: 0.92,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    })
+  );
+  portalVortex.position.set(0, 2.28, 0);
+  portalGate.add(portalVortex);
+
+  const gateRingOuter = new THREE.Mesh(new THREE.TorusGeometry(1.66, 0.055, 10, 42), cyanMat);
+  gateRingOuter.position.set(0, 2.28, 0);
+  const gateRingInner = new THREE.Mesh(new THREE.TorusGeometry(1.36, 0.035, 10, 36), accentMat);
+  gateRingInner.position.set(0, 2.28, 0);
+  portalGate.add(gateRingOuter, gateRingInner);
+
+  const portalGateLight = new THREE.PointLight(0x4df3ff, 14, 18, 1.5);
+  portalGateLight.position.set(runnerPortalPos.x + 1.5, 2.6, runnerPortalPos.z + 1.5);
+  scene.add(portalGateLight);
+  addGlowSprite(runnerPortalPos.x, 2.35, runnerPortalPos.z, 4.2, cyanGlowTex);
+
+  addPlaque(-11.4, 1.5, -16.8, Math.PI / 4, {
+    eyebrow: 'PORTAL · ∅-DRIFT',
+    title: 'VOID RUNNER',
+    lines: [
+      'Step through or press [E]',
+      'to launch high-speed 3D drift.',
+      'Destination: siciju.online/run/'
+    ],
+    accent: '#4df3ff'
+  });
+
+  animated.push((t) => {
+    portalVortex.rotation.z = -t * 1.1;
+    gateRingOuter.rotation.z = t * 0.45;
+    gateRingInner.rotation.z = -t * 0.75;
+  });
+
+  registerInteractable(portalVortex, {
+    id: 'runnerPortal',
+    label: 'Enter Void Runner Portal (/run/)',
+    onInteract: ({ enterRunnerPortal }) => {
+      if (enterRunnerPortal) enterRunnerPortal();
+    }
+  });
 
   // Welcome Plaque facing player spawn (player spawns at 0, 0, 7.5 looking north -Z)
   addBox(0, 1.35, -6.4, 3.6, 2.7, 0.35, monolithMat, true);
@@ -735,8 +851,10 @@ export function buildVoidWorld(scene) {
     colliders,
     interactables,
     animated,
+    runnerPortalPos,
     activateCentralPortal,
     getZoneName(x, y, z) {
+      if (Math.hypot(x - runnerPortalPos.x, z - runnerPortalPos.z) < 5.5) return 'RUNNER PORTAL';
       if (y > 5.2 && x > 18 && z < -18) return 'UPPER OBSERVATORY';
       if (z < -16 && Math.abs(x) < 12) return 'NORTH CORRIDOR';
       if (x > 20 && Math.abs(z) < 16) return 'EAST GALLERY';

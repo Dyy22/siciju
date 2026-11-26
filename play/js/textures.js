@@ -123,3 +123,45 @@ export function createPlaqueTexture({ eyebrow, title, lines, accent = '#d4ff4d' 
   tex.colorSpace = THREE.SRGBColorSpace;
   return tex;
 }
+
+export function createPortalVortexTexture() {
+  const size = 512;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+
+  const cx = size / 2;
+  const cy = size / 2;
+  const bg = ctx.createRadialGradient(cx, cy, 8, cx, cy, cx);
+  bg.addColorStop(0, '#ffffff');
+  bg.addColorStop(0.22, '#4df3ff');
+  bg.addColorStop(0.58, 'rgba(212, 255, 77, 0.55)');
+  bg.addColorStop(0.88, 'rgba(77, 243, 255, 0.14)');
+  bg.addColorStop(1, 'rgba(6, 6, 8, 0)');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, size, size);
+
+  ctx.translate(cx, cy);
+  for (let arm = 0; arm < 6; arm++) {
+    ctx.save();
+    ctx.rotate((Math.PI * 2 * arm) / 6);
+    ctx.beginPath();
+    for (let t = 0; t < 36; t++) {
+      const angle = t * 0.14;
+      const r = t * 6.5;
+      const px = Math.cos(angle) * r;
+      const py = Math.sin(angle) * r;
+      if (t === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.strokeStyle = arm % 2 === 0 ? 'rgba(255, 255, 255, 0.55)' : 'rgba(212, 255, 77, 0.6)';
+    ctx.lineWidth = 4;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}

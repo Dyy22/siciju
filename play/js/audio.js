@@ -176,4 +176,9 @@ export class VoidAudio {
       this._tone({ type: 'sine', freq: n, duration: 0.65, delay: idx * 0.09, volume: 0.07 });
     });
   }
+
+  playPortalWarp() {
+    this._tone({ type: 'sine', freq: 220, freqEnd: 880, duration: 0.55, volume: 0.085 });
+    this._tone({ type: 'triangle', freq: 330, freqEnd: 1320, duration: 0.55, delay: 0.06, volume: 0.06 });
+  }
 }
