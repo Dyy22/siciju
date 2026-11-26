@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; base-uri 'none'; form-action 'none';">
+  <meta name="referrer" content="no-referrer">
+  <title>VOID RUNNER // ∅-DRIFT | siciju.online</title>
+  <meta name="description" content="High-speed 3D endless void runner built with Three.js for siciju.online.">
+  <meta name="theme-color" content="#060608">
+
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com" referrerpolicy="no-referrer">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin referrerpolicy="no-referrer">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" referrerpolicy="no-referrer">
+  <link rel="stylesheet" href="/run/css/run.css">
+</head>
+<body>
+  <div id="runner-canvas" class="runner-canvas" aria-label="3D Void Runner Viewport"></div>
+
+  <!-- Minimal In-Game HUD -->
+  <header class="hud-top">
+    <div class="hud-cluster">
+      <a class="hud-pill hud-brand" href="/" title="Return to empty homepage">
+        <span class="accent-dot" aria-hidden="true"></span>
+        <span>∅-DRIFT</span>
+      </a>
+      <div class="hud-pill hud-metric">
+        <span class="metric-label">SCORE</span>
+        <strong id="score-val" class="metric-val">0</strong>
+        <span id="mult-badge" class="mult-badge">×1</span>
+      </div>
+      <div class="hud-pill hud-metric">
+        <span class="metric-label">DIST</span>
+        <strong id="dist-val" class="metric-val">0m</strong>
+      </div>
+      <div class="hud-pill hud-metric hud-best">
+        <span class="metric-label">BEST</span>
+        <strong id="best-val" class="metric-val">0</strong>
+      </div>
+    </div>
+
+    <div class="hud-cluster">
+      <div id="shield-pill" class="hud-pill hud-shield" hidden>SHIELD</div>
+      <button id="btn-sound" class="hud-pill hud-btn" type="button" aria-pressed="true" title="Toggle Sound (M)">sound: on</button>
+      <button id="btn-pause" class="hud-pill hud-btn" type="button" title="Pause (Esc / P)">menu</button>
+    </div>
+  </header>
+
+  <!-- Dynamic Event Callout -->
+  <div id="callout-banner" class="callout-banner" role="status" aria-live="polite" hidden></div>
+
+  <!-- Mobile Touch Controls -->
+  <div id="touch-pad" class="touch-pad" hidden>
+    <div class="touch-group">
+      <button id="touch-left" class="touch-btn" type="button" aria-label="Move Left">&larr;</button>
+      <button id="touch-right" class="touch-btn" type="button" aria-label="Move Right">&rarr;</button>
+    </div>
+    <div class="touch-group">
+      <button id="touch-duck" class="touch-btn" type="button" aria-label="Duck or Fast Drop">&darr;</button>
+      <button id="touch-jump" class="touch-btn touch-btn-accent" type="button" aria-label="Jump">&uarr;</button>
+    </div>
+  </div>
+
+  <!-- Start / Pause / Game Over Overlay -->
+  <div id="run-overlay" class="run-overlay" role="dialog" aria-modal="true" aria-labelledby="overlay-title">
+    <div class="overlay-card">
+      <div id="overlay-eyebrow" class="overlay-eyebrow">∅ SICIJU.ONLINE / RUNNER</div>
+      <h1 id="overlay-title" class="overlay-title">VOID RUNNER</h1>
+      <p id="overlay-subtitle" class="overlay-subtitle">
+        There is nothing at the end of this highway either. See how far you can drift before the void catches up.
+      </p>
+
+      <div id="stats-grid" class="stats-grid" hidden>
+        <div class="stat-box">
+          <span class="stat-label">SCORE</span>
+          <strong id="stat-score" class="stat-num">0</strong>
+          <span id="new-record-badge" class="new-record" hidden>NEW RECORD</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">DISTANCE</span>
+          <strong id="stat-dist" class="stat-num">0m</strong>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">VOID ORBS</span>
+          <strong id="stat-orbs" class="stat-num">0</strong>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">BEST SCORE</span>
+          <strong id="stat-best" class="stat-num">0</strong>
+        </div>
+      </div>
+
+      <div class="controls-legend">
+        <span><kbd>A</kbd> <kbd>D</kbd> / <kbd>&larr;</kbd> <kbd>&rarr;</kbd> switch lanes</span>
+        <span><kbd>W</kbd> / <kbd>&uarr;</kbd> / <kbd>Space</kbd> jump</span>
+        <span><kbd>S</kbd> / <kbd>&darr;</kbd> duck / drop</span>
+        <span><kbd>Esc</kbd> / <kbd>P</kbd> pause</span>
+      </div>
+
+      <div class="overlay-actions">
+        <button id="btn-start" class="btn-primary" type="button">LAUNCH DRIFT</button>
+        <a class="btn-ghost" href="/play/">explore 3D void &rarr;</a>
+        <a class="btn-ghost" href="/">&larr; empty homepage</a>
+      </div>
+
+      <p id="webgl-error" class="webgl-error" hidden></p>
+    </div>
+  </div>
+
+  <script type="module" src="/run/js/runner.js"></script>
+</body>
+</html>

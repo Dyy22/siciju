@@ -168,6 +168,7 @@
       '  ping          measure emptiness latency\n' +
       '  lamp          pull the lamp cord remotely\n' +
       '  play          step behind the curtain (3D)\n' +
+      '  run           launch 3D Void Runner\n' +
       '  secret        reveal the grand secret\n' +
       '  sudo rm -rf / don’t even try\n' +
       '  clear / exit  clear or close shell',
@@ -186,7 +187,8 @@
       sudoRm: 'Permission denied. You cannot delete what was never there.',
       secret: 'The secret: the owner bought siciju.online before deciding what to build, so emptiness became the feature.',
       lampToggled: 'Toggled the lamp cord remotely. Look around.',
-      enterPlay: 'Opening backstage hatch... shifting reality into 3 dimensions.'
+      enterPlay: 'Opening backstage hatch... shifting reality into 3 dimensions.',
+      enterRun: 'Booting Void Runner // ∅-DRIFT... watch for obstacles.'
     },
 
     certificateTemplate: function (data) {

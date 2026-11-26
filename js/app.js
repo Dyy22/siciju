@@ -839,6 +839,12 @@
       global.setTimeout(function () {
         global.location.href = '/play/';
       }, 650);
+    } else if (cmd === 'run' || cmd === 'runner' || cmd === 'drift') {
+      appendTermLine(res.enterRun);
+      Sound.playUnlock();
+      global.setTimeout(function () {
+        global.location.href = '/run/';
+      }, 650);
     } else {
       appendTermLine(dict.terminalUnknown(trimmed));
     }
